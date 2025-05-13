@@ -1,7 +1,13 @@
-import { useState } from "react";
+import Dashboard from './pages/Dashboard'
+import Navbar from './components/navbar/Header'
 
-function App() {
-  return <h1>hello</h1>;
+const App = () => {
+  return (
+    <div>
+      <Navbar user={{ name: 'You', avatar: 'https://i.pravatar.cc/100' }} />
+      <Dashboard />
+    </div>
+  )
 }
 
-export default App;
+export default App
