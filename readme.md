@@ -55,12 +55,6 @@ We're building a habit. A daily connection. A bond.
 
 ---
 
-## 📷 UI Preview _(Coming soon)_
-
-> We’ll share wireframes or mockups here soon!
-
----
-
 ## 🧠 Inspiration
 
 The idea for CodeBond came from wanting to stay accountable, have fun, and grow as coders — together. It's not just about solving problems… it's about solving them **with the people who matter**.
