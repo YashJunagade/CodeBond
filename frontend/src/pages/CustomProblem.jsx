@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
+import { createProblem } from '../services/problemService'
 import {
   Calendar,
   Clock,
@@ -13,7 +14,9 @@ import {
   Code,
   Zap,
   AlarmClock,
+  AlertCircle,
 } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function CustomProblem() {
   const { theme } = useTheme()
@@ -23,6 +26,8 @@ export default function CustomProblem() {
   ])
   const [difficulty, setDifficulty] = useState('medium')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState({
@@ -63,24 +68,74 @@ export default function CustomProblem() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setError(null)
+    setSuccess(false)
 
-    // Prepare data for submission
+    // Format test cases according to schema
+    const formattedTestCases = testCases.map((tc) => ({
+      input: tc.input,
+      output: tc.expectedOutput,
+    }))
+
+    // Generate a unique qid (could be improved with better logic)
+    const timestamp = new Date().getTime()
+    const randomSuffix = Math.floor(Math.random() * 1000)
+    const qid = `p${timestamp}${randomSuffix}`
+
+    // Prepare tags array from comma-separated string
+    const tagsArray = formData.tags
+      ? formData.tags.split(',').map((tag) => tag.trim())
+      : []
+
+    // Prepare data for submission according to MongoDB schema
     const problemData = {
-      ...formData,
-      problemType,
-      testCases,
-      difficulty,
-      dateCreated: new Date().toISOString(),
+      qid,
+      title: formData.title,
+      level: difficulty,
+      tags: tagsArray,
+      description: formData.description,
+      example: formData.exampleExplanation,
+      testcases: formattedTestCases,
+      timeLimit: Number(formData.timeLimit) || 0,
+      category: problemType,
+      dayOrWeekNo:
+        problemType === 'daily'
+          ? Number(formData.dayNumber)
+          : Number(formData.weekNumber),
+      weekDay: problemType === 'weekly' ? formData.weekDay : undefined,
+      date: formData.date,
     }
 
-    console.log('Submitting problem data:', problemData)
-
-    // Mock API call
-    setTimeout(() => {
+    try {
+      const response = await createProblem(problemData)
+      console.log('Problem created:', response)
+      setSuccess(true)
+      toast.success('Problem created successfully!')
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        exampleExplanation: '',
+        timeLimit: 0,
+        dayNumber: 1,
+        weekNumber: 1,
+        weekDay: 'Monday',
+        date: new Date().toISOString().split('T')[0],
+        tags: '',
+      })
+      setTestCases([{ input: '', expectedOutput: '' }])
+      setDifficulty('medium')
+      setProblemType('daily')
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          'Failed to create problem. Please try again.'
+      )
+      console.error('Error creating problem:', err)
+      toast.error('Failed to create problem')
+    } finally {
       setLoading(false)
-      // Reset form or show success
-      alert('Problem uploaded successfully!')
-    }, 1500)
+    }
   }
 
   return (
@@ -93,16 +148,33 @@ export default function CustomProblem() {
           </h1>
         </div>
 
+        {/* Status Messages */}
+        {error && (
+          <div className="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative dark:bg-red-900 dark:text-red-100 dark:border-red-700">
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              <span>{error}</span>
+            </div>
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative dark:bg-green-900 dark:text-green-100 dark:border-green-700">
+            <div className="flex items-center">
+              <Check className="w-5 h-5 mr-2" />
+              <span>Problem uploaded successfully!</span>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Info Section */}
-          <section
-            className={`bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 transition-all duration-300 ease-in-out hover:shadow-lg dark:hover:shadow-2xl hover:border hover:border-gray-300 dark:hover:border-gray-600'}`}
-          >
-            {' '}
-            <h2 className="text-xl font-semibold mb-4 flex items-center bg-gradient-to-r from-indigo-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 px-4 py-2 rounded-md">
+          <section className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center">
               <Book className="mr-2 text-indigo-500" />
               Basic Information
             </h2>
+
             <div className="space-y-4">
               {/* Title */}
               <div>
@@ -118,7 +190,7 @@ export default function CustomProblem() {
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors hover:border-blue-500 hover:shadow-lg dark:hover:border-blue-300 dark:hover:shadow-lg"
+                  className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                   required
                   placeholder="e.g., Two Sum"
                 />
@@ -136,16 +208,16 @@ export default function CustomProblem() {
                       type="button"
                       onClick={() => setDifficulty(level)}
                       className={`px-4 py-2 rounded-full text-sm font-medium capitalize
-              ${
-                difficulty === level
-                  ? level === 'easy'
-                    ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
-                    : level === 'medium'
-                      ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
-                      : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
-              }
-              transition-colors duration-200 hover:bg-opacity-80 hover:shadow-md hover:border hover:border-gray-400 dark:hover:border-gray-500`}
+                        ${
+                          difficulty === level
+                            ? level === 'easy'
+                              ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100'
+                              : level === 'medium'
+                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100'
+                                : 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
+                        }
+                        transition-colors duration-200`}
                     >
                       {level}
                     </button>
@@ -168,7 +240,7 @@ export default function CustomProblem() {
                   name="tags"
                   value={formData.tags}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors hover:border-blue-500 hover:shadow-lg dark:hover:border-blue-300 dark:hover:shadow-lg"
+                  className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                   placeholder="e.g., arrays, hash-table, two-pointers (comma separated)"
                 />
               </div>
@@ -176,10 +248,8 @@ export default function CustomProblem() {
           </section>
 
           {/* Problem Details Section */}
-          <section
-            className={`bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 transition-all duration-300 ease-in-out hover:shadow-lg dark:hover:shadow-2xl hover:border hover:border-gray-300 dark:hover:border-gray-600'}`}
-          >
-            <h2 className="text-xl font-semibold mb-4 flex items-center bg-gradient-to-r from-indigo-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 px-4 py-2 rounded-md">
+          <section className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center">
               <Code className="mr-2 text-teal-500" />
               Problem Details
             </h2>
@@ -199,7 +269,7 @@ export default function CustomProblem() {
                   value={formData.description}
                   onChange={handleInputChange}
                   rows={6}
-                  className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors hover:border-blue-500 hover:shadow-lg dark:hover:border-blue-300 dark:hover:shadow-lg font-mono"
+                  className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors font-mono"
                   required
                   placeholder="Describe the problem in detail..."
                 ></textarea>
@@ -219,7 +289,7 @@ export default function CustomProblem() {
                   value={formData.exampleExplanation}
                   onChange={handleInputChange}
                   rows={3}
-                  className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors hover:border-blue-500 hover:shadow-lg dark:hover:border-blue-300 dark:hover:shadow-lg font-mono"
+                  className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors font-mono"
                   placeholder="Explain the example solution step by step..."
                 ></textarea>
               </div>
@@ -240,7 +310,7 @@ export default function CustomProblem() {
                   value={formData.timeLimit}
                   onChange={handleInputChange}
                   min="0"
-                  className="w-full sm:w-32 px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors hover:border-blue-500 hover:shadow-lg dark:hover:border-blue-300 dark:hover:shadow-lg"
+                  className="w-full sm:w-32 px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                   placeholder="0 = no limit"
                 />
               </div>
@@ -248,10 +318,8 @@ export default function CustomProblem() {
           </section>
 
           {/* Test Cases Section */}
-          <section
-            className={`bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 transition-all duration-300 ease-in-out hover:shadow-lg dark:hover:shadow-2xl hover:border hover:border-gray-300 dark:hover:border-gray-600'}`}
-          >
-            <h2 className="text-xl font-semibold mb-4 flex items-center bg-gradient-to-r from-indigo-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 px-4 py-2 rounded-md">
+          <section className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center">
               <Zap className="mr-2 text-amber-500" />
               Test Cases
             </h2>
@@ -260,7 +328,7 @@ export default function CustomProblem() {
               {testCases.map((testCase, index) => (
                 <div
                   key={index}
-                  className="p-4 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 transition-all duration-300 ease-in-out hover:shadow-lg dark:hover:shadow-2xl hover:border hover:border-gray-300 dark:hover:border-gray-600"
+                  className="p-4 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800"
                 >
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-medium">Test Case #{index + 1}</h3>
@@ -285,7 +353,7 @@ export default function CustomProblem() {
                           handleTestCaseChange(index, 'input', e.target.value)
                         }
                         rows={3}
-                        className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors font-mono text-sm hover:border-blue-500 hover:shadow-lg dark:hover:border-blue-300 dark:hover:shadow-lg"
+                        className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors font-mono text-sm"
                         placeholder="Input values"
                         required
                       ></textarea>
@@ -304,7 +372,7 @@ export default function CustomProblem() {
                           )
                         }
                         rows={3}
-                        className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors font-mono text-sm hover:border-blue-500 hover:shadow-lg dark:hover:border-blue-300 dark:hover:shadow-lg"
+                        className="w-full px-3 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors font-mono text-sm"
                         placeholder="Expected output"
                         required
                       ></textarea>
@@ -324,14 +392,12 @@ export default function CustomProblem() {
           </section>
 
           {/* Scheduling Section */}
-          <section
-            className={`bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6 transition-all duration-300 ease-in-out hover:shadow-lg dark:hover:shadow-2xl hover:border hover:border-gray-300 dark:hover:border-gray-600'}`}
-          >
-            {' '}
-            <h2 className="text-xl font-semibold mb-4 flex items-center bg-gradient-to-r from-indigo-100 to-indigo-200 dark:from-gray-800 dark:to-gray-900 px-4 py-2 rounded-md">
+          <section className="bg-white dark:bg-zinc-800 rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center">
               <Calendar className="mr-2 text-purple-500" />
               Scheduling
             </h2>
+
             <div className="space-y-4">
               {/* Problem Type Selection */}
               <div>
@@ -339,27 +405,28 @@ export default function CustomProblem() {
                   Problem Type
                 </label>
                 <div className="flex flex-wrap gap-3">
-                  {['daily', 'weekly'].map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setProblemType(type)}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200
-              ${
-                problemType === type
-                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100'
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100 hover:bg-blue-50 dark:hover:bg-gray-600'
-              }`}
-                    >
-                      {type === 'daily'
-                        ? 'Daily Challenge'
-                        : 'Weekly Challenge'}
-                    </button>
-                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setProblemType('daily')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium
+                      ${problemType === 'daily' ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'}
+                      transition-colors duration-200`}
+                  >
+                    Daily Challenge
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProblemType('weekly')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium
+                      ${problemType === 'weekly' ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'}
+                      transition-colors duration-200`}
+                  >
+                    Weekly Challenge
+                  </button>
                 </div>
               </div>
 
-              {/* Dynamic Fields */}
+              {/* Dynamic fields based on problem type */}
               {problemType === 'daily' ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
@@ -376,7 +443,7 @@ export default function CustomProblem() {
                       value={formData.dayNumber}
                       onChange={handleInputChange}
                       min="1"
-                      className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors font-medium"
+                      className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                       required
                     />
                   </div>
@@ -393,7 +460,7 @@ export default function CustomProblem() {
                       name="date"
                       value={formData.date}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors font-medium"
+                      className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                       required
                     />
                   </div>
@@ -414,7 +481,7 @@ export default function CustomProblem() {
                       value={formData.weekNumber}
                       onChange={handleInputChange}
                       min="1"
-                      className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors hover:border-blue-500 hover:shadow-lg dark:hover:border-blue-300 dark:hover:shadow-lg font-mono"
+                      className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                       required
                     />
                   </div>
@@ -430,7 +497,7 @@ export default function CustomProblem() {
                       name="weekDay"
                       value={formData.weekDay}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors hover:border-blue-500 hover:shadow-lg dark:hover:border-blue-300 dark:hover:shadow-lg font-mono"
+                      className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                       required
                     >
                       {[
@@ -461,7 +528,7 @@ export default function CustomProblem() {
                       name="date"
                       value={formData.date}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors hover:border-blue-500 hover:shadow-lg dark:hover:border-blue-300 dark:hover:shadow-lg font-mono"
+                      className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
                       required
                     />
                   </div>
