@@ -5,14 +5,21 @@ import {
   CheckCircle,
   XCircle,
   CalendarDays,
-  Zap,
   BookOpen,
-  Trophy,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 // Enhanced DailyQuestion component with animations and styling
 const DailyQuestion = ({ question }) => {
   const [isHovered, setIsHovered] = useState(false)
+  const navigate = useNavigate()
+
+  const handleRowClick = (problem) => {
+    const formattedTitle = encodeURIComponent(
+      problem.title.replace(/\s+/g, '-')
+    )
+    navigate(`/codeEditor/${formattedTitle}`)
+  }
 
   // Determine status color and icon
   const isDone = question.status === 'Done'
@@ -50,7 +57,10 @@ const DailyQuestion = ({ question }) => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 dark:border-gray-700">
+      <div
+        className="bg-white dark:bg-gray-800 cursor-pointer rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 dark:border-gray-700 "
+        onClick={() => handleRowClick(question)}
+      >
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-3">
           <div className="flex items-center mb-2 md:mb-0">
             <div className="bg-purple-100 dark:bg-purple-900/30 p-1.5 rounded-lg mr-2">

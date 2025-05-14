@@ -9,10 +9,17 @@ import {
   BookOpen,
   Trophy,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const WeeklyQuestion = ({ question }) => {
   const [isHovered, setIsHovered] = useState(false)
-
+  const navigate = useNavigate()
+  const handleRowClick = (problem) => {
+    const formattedTitle = encodeURIComponent(
+      problem.title.replace(/\s+/g, '-')
+    )
+    navigate(`/codeEditor/${formattedTitle}`)
+  }
   // Determine status color and icon
   const isDone = question.status === 'Done'
 
@@ -52,7 +59,10 @@ const WeeklyQuestion = ({ question }) => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 dark:border-gray-700">
+      <div
+        className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 dark:border-gray-700 cursor-pointer"
+        onClick={() => handleRowClick(question)}
+      >
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-3">
           <div className="flex items-center mb-2 md:mb-0">
             <div className="bg-blue-100 dark:bg-blue-900/30 p-1.5 rounded-lg mr-2">
