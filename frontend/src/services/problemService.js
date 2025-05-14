@@ -1,8 +1,7 @@
 // services/problemService.js
 import axios from 'axios'
 
-// const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/'
-const API_URL = 'http://localhost:5000/api'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 export const createProblem = async (problemData) => {
   try {
@@ -20,7 +19,8 @@ export const createProblem = async (problemData) => {
 export const getAllProblems = async () => {
   try {
     const response = await axios.get(`${API_URL}/problems`)
-    return response.data
+    // Ensure we return the actual array of problems
+    return Array.isArray(response.data) ? response.data : response.data.problems
   } catch (error) {
     console.error(
       'Error fetching problems:',
@@ -29,14 +29,3 @@ export const getAllProblems = async () => {
     throw error
   }
 }
-
-const fetchProblems = async () => {
-  try {
-    const problems = await getAllProblems()
-    console.log('Fetched problems:', problems)
-  } catch (error) {
-    console.error('Error fetching problems:', error)
-  }
-}
-
-fetchProblems()
