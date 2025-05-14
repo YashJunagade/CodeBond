@@ -45,7 +45,7 @@ const Header = ({ user }) => {
       <div className="flex items-center gap-3 mt-4 md:mt-0">
         <button
           onClick={toggleTheme}
-          className="relative bg-gray-200 dark:bg-gray-600 p-1.5 md:p-2 rounded-full transition-colors duration-300 hover:bg-gray-300 dark:hover:bg-gray-500 overflow-hidden w-10 h-10 flex items-center justify-center"
+          className="relative bg-gray-200 dark:bg-gray-800 p-1.5 md:p-2 rounded-full transition-colors duration-300 hover:bg-gray-300 dark:hover:bg-gray-700 overflow-hidden w-10 h-10 flex items-center justify-center"
           title="Toggle Theme"
         >
           <Moon
@@ -60,7 +60,7 @@ const Header = ({ user }) => {
               theme === 'dark'
                 ? 'opacity-100 scale-100 rotate-0'
                 : 'opacity-0 scale-75 rotate-90'
-            } text-yellow-300`}
+            } text-primaryBtn`}
           />
         </button>
 
@@ -72,9 +72,7 @@ const Header = ({ user }) => {
               className="w-10 h-10 rounded-full border cursor-pointer"
             />
             {showProfilePopup && (
-              <div
-                className="absolute right-0 mt-2 w-80 backdrop-blur-lg  bg-white/70 dark:bg-[#1f1f1f]/80 border border-gray-300 dark:border-gray-700 shadow-xl dark:shadow-[0_4px_30px_rgba(0,0,0,0.7)] hover:shadow-2xl dark:hover:shadow-[0_6px_40px_rgba(0,0,0,0.8)] rounded-xl p-5 z-50 transition-all duration-300 transform scale-95 animate-fade-slide"
-              >
+              <div className="absolute right-0 mt-2 w-60 backdrop-blur-lg  bg-white/70 dark:bg-[#1f1f1f]/80 border border-gray-300 dark:border-gray-700 shadow-xl dark:shadow-[0_4px_30px_rgba(0,0,0,0.7)] hover:shadow-2xl dark:hover:shadow-[0_6px_40px_rgba(0,0,0,0.8)] rounded-xl p-5 z-50 transition-all duration-300 transform scale-95 animate-fade-slide">
                 <div className="border-b-2 border-primaryBtn pb-2 mb-2">
                   <p className="text-sm font-semibold text-black dark:text-white tracking-wide">
                     👋 Hey {user.name},
