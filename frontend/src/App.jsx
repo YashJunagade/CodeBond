@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Navbar from './components/navbar/Header'
 import Problems from './pages/Problems'
+import CodeEditor from './pages/CodeEditor'
 
 const App = () => {
   return (
@@ -10,6 +11,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/problems" element={<Problems />} />
+        <Route path="/codeEditor" element={<CodeEditor />} />
       </Routes>
     </Router>
   )
