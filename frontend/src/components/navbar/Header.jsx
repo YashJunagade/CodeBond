@@ -1,6 +1,7 @@
 import { Moon, Sun, Menu } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 const Header = ({ user }) => {
   const { theme, toggleTheme } = useTheme()
@@ -31,15 +32,15 @@ const Header = ({ user }) => {
       <nav
         className={`${menuOpen ? 'flex' : 'hidden'} flex-col md:flex md:flex-row gap-4 md:gap-6 mt-4 md:mt-0`}
       >
-        <a className="navbar-btn" href="#">
+        <Link className="navbar-btn" to="/">
           Dashboard
-        </a>
-        <a className="navbar-btn" href="#">
+        </Link>
+        <Link className="navbar-btn" to="/problems">
           Problems
-        </a>
-        <a className="navbar-btn" href="#">
+        </Link>
+        <Link className="navbar-btn" to="/customProblem">
           Custom Problem
-        </a>
+        </Link>
       </nav>
 
       <div className="flex items-center gap-3 mt-4 md:mt-0">
