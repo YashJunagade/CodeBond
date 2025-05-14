@@ -1,12 +1,17 @@
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Navbar from './components/navbar/Header'
+import Problems from './pages/Problems'
 
 const App = () => {
   return (
-    <div>
+    <Router>
       <Navbar user={{ name: 'You', avatar: 'https://i.pravatar.cc/100' }} />
-      <Dashboard />
-    </div>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/problems" element={<Problems />} />
+      </Routes>
+    </Router>
   )
 }
 

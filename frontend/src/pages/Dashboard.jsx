@@ -1,8 +1,8 @@
-import Navbar from '../components/navbar/Header'
 import FriendsProgress from '../components/dashboard/FriendsProgress'
 import DailyQuestion from '../components/dashboard/DailyQuestion'
 import WeeklyQuestion from '../components/dashboard/WeeklyQuestion'
 import MotivationQuote from '../components/dashboard/MotivationQuote'
+import Header from '../components/navbar/Header'
 
 const Dashboard = () => {
   const user = {
@@ -48,6 +48,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen dark:bg-primaryBg">
+      {/* <Header /> */}
       <FriendsProgress friends={friends} />
       <DailyQuestion question={daily} />
       <WeeklyQuestion question={weekly} />
