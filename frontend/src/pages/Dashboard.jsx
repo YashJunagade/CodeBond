@@ -33,11 +33,6 @@ const Dashboard = () => {
     },
   ]
 
-  const quote = {
-    text: 'THANK YOU SO MUCH GOD FOR EVERYTHING. I NEVER SEE THAT YOU GIVE ME LESS THAN ANYONE',
-    author: 'Yash Junagade',
-  }
-
   useEffect(() => {
     const fetchDashboardQuestions = async () => {
       try {
