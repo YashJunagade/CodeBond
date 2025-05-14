@@ -7,3 +7,33 @@ body {
     background 0.3s ease,
     color 0.3s ease;
 }
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-slide {
+  animation: fadeSlide 0.3s ease-out forwards;
+}
+
+@layer components {
+  .navbar-btn {
+    @apply font-medium text-black dark:text-white transition duration-300 hover:scale-105 
+           hover:text-primaryBtn dark:hover:text-primaryBtn 
+           px-6 py-3 rounded-t-lg focus:outline-none inline-block 
+           border-b-2 border-transparent hover:border-primaryBtn dark:hover:border-primaryBtn;
+  }
+
+  .navbar-btn-active {
+    @apply border-primaryBtn text-primaryBtn dark:text-primaryBtn dark:border-primaryBtn;
+  }
+}
+
+
