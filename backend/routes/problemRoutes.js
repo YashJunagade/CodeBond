@@ -4,9 +4,12 @@ const router = express.Router();
 const {
   createProblem,
   getAllProblems,
-} = require("../controllers/problemCountoller"); // typo here: see below
+  getProblemByTitle,
+} = require("../controllers/problemContoller");
 
+// Problem routes
 router.post("/problems", createProblem);
 router.get("/problems", getAllProblems);
+router.get("/problems/title/:slug", getProblemByTitle);
 
 module.exports = router;
