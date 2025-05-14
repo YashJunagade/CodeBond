@@ -34,6 +34,7 @@ const Dashboard = () => {
     date: '13-05-25',
     title: 'Sum of Two Number',
     timeTaken: '1.3 hr',
+    status: 'Done',
   }
   const weekly = {
     week: 1,
