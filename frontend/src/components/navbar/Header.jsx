@@ -6,7 +6,7 @@ const Header = ({ user }) => {
 
   return (
     <header
-      className={`flex items-center justify-between p-4 border-b dark:border-gray-700 ${theme}`}
+      className={`flex items-center justify-between p-4 dark:bg-primaryBg ${theme}`}
     >
       <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
         CodeBond<span className="text-black dark:text-white">🖤</span>
@@ -16,7 +16,7 @@ const Header = ({ user }) => {
       </h1>
 
       <nav className="flex gap-6">
-        <a className="font-medium text-black dark:text-white" href="#">
+        <a className="font-medium text-[#E83F25] dark:text-white" href="#">
           Dashboard
         </a>
         <a className="font-medium text-gray-500 dark:text-gray-300" href="#">
