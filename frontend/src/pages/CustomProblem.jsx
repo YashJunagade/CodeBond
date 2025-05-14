@@ -34,6 +34,7 @@ export default function CustomProblem() {
     title: '',
     description: '',
     exampleExplanation: '',
+    boilerplate: '',
     timeLimit: 0,
     dayNumber: 1,
     weekNumber: 1,
@@ -95,6 +96,7 @@ export default function CustomProblem() {
       tags: tagsArray,
       description: formData.description,
       example: formData.exampleExplanation,
+      boilerplate: formData.boilerplate,
       testcases: formattedTestCases,
       timeLimit: Number(formData.timeLimit) || 0,
       category: problemType,
@@ -116,6 +118,7 @@ export default function CustomProblem() {
         title: '',
         description: '',
         exampleExplanation: '',
+        boilerplate: '',
         timeLimit: 0,
         dayNumber: 1,
         weekNumber: 1,
@@ -291,6 +294,25 @@ export default function CustomProblem() {
                   rows={3}
                   className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors font-mono"
                   placeholder="Explain the example solution step by step..."
+                ></textarea>
+              </div>
+
+              {/* Boilerplate / Starting Code */}
+              <div>
+                <label
+                  htmlFor="boilerplate"
+                  className="block text-sm font-medium mb-1"
+                >
+                  Starting Code (Boilerplate)
+                </label>
+                <textarea
+                  id="boilerplate"
+                  name="boilerplate"
+                  value={formData.boilerplate}
+                  onChange={handleInputChange}
+                  rows={5}
+                  className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors font-mono"
+                  placeholder={`function solution() {\n  // your code here\n}`}
                 ></textarea>
               </div>
 
