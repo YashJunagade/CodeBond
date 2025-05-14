@@ -7,6 +7,7 @@ const problemSchema = new mongoose.Schema({
   tags: [String],
   description: { type: String, required: true },
   example: String,
+  boilerplate: { type: String },
   testcases: [
     {
       input: { type: String, required: true },
@@ -31,7 +32,7 @@ const problemSchema = new mongoose.Schema({
   date: { type: Date, required: true },
 });
 
-// Update the updatedAt field on save
+// Optional: track updated time
 problemSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   next();
