@@ -6,7 +6,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        primaryBg: '#202020',
+        primaryBg: '#FFFBF5',
         secondBg: 'red',
         primaryBtn: '#E83F25',
       },

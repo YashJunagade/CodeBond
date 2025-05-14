@@ -10,7 +10,7 @@ const Header = ({ user }) => {
 
   return (
     <header
-      className={`flex flex-col md:flex-row md:items-center justify-between p-4 dark:bg-primaryBg ${theme} animate-navbar`}
+      className={`flex flex-col bg-[#FFFCEF] md:flex-row md:items-center justify-between p-4 dark:bg-primaryBg ${theme} animate-navbar`}
     >
       <div className="flex items-center justify-between w-full md:w-auto">
         <div>
