@@ -6,7 +6,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        primaryBg: '#FFFBF5',
+        primaryBg: '#202020',
         secondBg: 'red',
         primaryBtn: '#E83F25',
       },
@@ -22,7 +22,7 @@ export default {
       },
       animation: {
         navbar: 'navbar 0.6s ease-out',
-        'fade-slide': 'fadeSlide 0.3s ease-out forwards',
+        'fade-slide': 'fadeSlide 0.s ease-out forwards',
       },
     },
   },
