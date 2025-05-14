@@ -1,10 +1,14 @@
+import { useEffect, useState } from 'react'
 import FriendsProgress from '../components/dashboard/FriendsProgress'
 import DailyQuestion from '../components/dashboard/DailyQuestion'
 import WeeklyQuestion from '../components/dashboard/WeeklyQuestion'
 import MotivationQuote from '../components/dashboard/MotivationQuote'
-import Header from '../components/navbar/Header'
+import { getAllProblems } from '../services/problemService'
 
 const Dashboard = () => {
+  const [dailyQuestion, setDailyQuestion] = useState(null)
+  const [weeklyQuestion, setWeeklyQuestion] = useState(null)
+
   const user = {
     name: 'Yash',
     avatar: 'https://example.com/yash.jpg',
@@ -29,31 +33,61 @@ const Dashboard = () => {
     },
   ]
 
-  const daily = {
-    day: 1,
-    date: '13-05-25',
-    title: 'Sum of Two Number',
-    timeTaken: '1.3 hr',
-    status: 'Done',
-  }
-  const weekly = {
-    week: 1,
-    date: '18-05-25',
-    title: 'Fibonacci Series',
-    timeTaken: '1 hr',
-  }
   const quote = {
     text: 'THANK YOU SO MUCH GOD FOR EVERYTHING. I NEVER SEE THAT YOU GIVE ME LESS THAN ANYONE',
     author: 'Yash Junagade',
   }
 
+  useEffect(() => {
+    const fetchDashboardQuestions = async () => {
+      try {
+        const problems = await getAllProblems()
+        const now = new Date()
+        now.setHours(0, 0, 0, 0)
+
+        // Helper to filter future/today questions and sort them by date
+        const getUpcoming = (category) => {
+          return problems
+            .filter((p) => p.category === category && new Date(p.date) >= now)
+            .sort((a, b) => new Date(a.date) - new Date(b.date))[0] // only the next one
+        }
+
+        const daily = getUpcoming('daily')
+        const weekly = getUpcoming('weekly')
+
+        if (daily) {
+          setDailyQuestion({
+            day: daily.dayOrWeekNo,
+            date: new Date(daily.date).toLocaleDateString('en-GB'),
+            title: daily.title,
+            timeTaken: `${daily.timeLimit} hr`,
+            status: 'Pending', // or 'Done' if you track completion
+          })
+        }
+
+        if (weekly) {
+          setWeeklyQuestion({
+            week: weekly.dayOrWeekNo,
+            date: new Date(weekly.date).toLocaleDateString('en-GB'),
+            title: weekly.title,
+            timeTaken: `${weekly.timeLimit} hr`,
+          })
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard problems:', err)
+      }
+    }
+
+    fetchDashboardQuestions()
+  }, [])
+
   return (
     <div className="min-h-screen dark:bg-primaryBg">
       {/* <Header /> */}
       <FriendsProgress friends={friends} />
-      <DailyQuestion question={daily} />
-      <WeeklyQuestion question={weekly} />
-      <MotivationQuote quote={quote} />
+      {dailyQuestion && <DailyQuestion question={dailyQuestion} />}
+      {weeklyQuestion && <WeeklyQuestion question={weeklyQuestion} />}
+      <MotivationQuote />
     </div>
   )
 }
