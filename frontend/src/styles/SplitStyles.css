@@ -1,0 +1,16 @@
+.split {
+  position: relative;
+}
+
+.split .gutter {
+  background-color: transparent;
+  cursor: col-resize;
+}
+
+.split .gutter:hover {
+  background-color: red;
+}
+
+.dark .split .gutter:hover {
+  background-color: red;
+}
