@@ -186,7 +186,7 @@ const FriendsProgress = ({ userId, onFriendAdded }) => {
       ) : (
         <div className="flex flex-wrap justify-center gap-8">
           {friends.map((friend) => (
-            <ProgressCard key={friend.id} friend={friend} />
+            <ProgressCard key={friend.id + 1} friend={friend} />
           ))}
         </div>
       )}

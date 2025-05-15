@@ -3,12 +3,14 @@ import { useTheme } from '../../context/ThemeContext'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useUserProgress } from '../../context/UserProgressContext'
 
 const Header = () => {
   const { theme, toggleTheme } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
   const { user } = useAuth()
+  const { progress } = useUserProgress()
 
   return (
     <header
@@ -83,9 +85,9 @@ const Header = () => {
                 </div>
 
                 <div className="space-y-1 text-xs text-gray-700 dark:text-gray-300">
-                  <p>Day -</p>
-                  <p>Week -</p>
-                  <p>Total Score -</p>
+                  <p>Day - {progress.day}</p>
+                  <p>Week - {progress.week}</p>
+                  <p>Total Score - {progress.total}</p>
                 </div>
               </div>
             )}

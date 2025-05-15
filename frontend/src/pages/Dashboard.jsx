@@ -6,6 +6,7 @@ import MotivationQuote from '../components/dashboard/MotivationQuote'
 import { getAllProblems } from '../services/problemService'
 import { useAuth } from '../context/AuthContext' // Import the AuthContext
 import { getUserProfile } from '../services/userService'
+import friendService from '../services/friendService'
 
 const Dashboard = () => {
   const [dailyQuestion, setDailyQuestion] = useState(null)
@@ -25,19 +26,12 @@ const Dashboard = () => {
 
   // Simulate fetching friends on component mount and when a friend is added
   const fetchFriendsProgress = async () => {
-    if (!loggedInUserId) return // Don't fetch if we don't have the user ID yet
-
+    if (!loggedInUserId) return
     try {
-      const response = await fetch(`/api/friends/progress/${loggedInUserId}`)
-      if (response.ok) {
-        const data = await response.json()
-        setFriends(data)
-      } else {
-        console.error('Failed to fetch friends progress')
-        setFriends([])
-      }
+      const data = await friendService.getFriendsProgress(loggedInUserId)
+      setFriends(data)
     } catch (error) {
-      console.error('Error fetching friends progress:', error)
+      console.error('Error fetching friends progress:', error.message)
       setFriends([])
     }
   }
