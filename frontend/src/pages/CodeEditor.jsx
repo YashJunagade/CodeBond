@@ -17,6 +17,8 @@ import { getProblemByTitle } from '../services/problemService'
 import ProblemDescription from '../components/CodeEditor/ProblemDescription'
 import ExecutionResults from '../components/CodeEditor/ExecutionResults'
 import { runCode, submitCodeWithTests } from '../services/executionServer'
+import { updateUserSubmission } from '../services/userService' // Import the new service function
+import { useAuth } from '../context/AuthContext'
 
 export default function CodeEditor() {
   const { title } = useParams()
@@ -29,12 +31,14 @@ export default function CodeEditor() {
   const [code, setCode] = useState('// Your code here')
   const [timer, setTimer] = useState(0)
   const [isRunning, setIsRunning] = useState(false)
-  const [language, setLanguage] = useState('cpp') // Add language state, default to C++
-
+  const [language, setLanguage] = useState('cpp')
   const [activeTab, setActiveTab] = useState('problem')
   const [submissionResults, setSubmissionResults] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submissionError, setSubmissionError] = useState(null)
+  const { user } = useAuth()
+  const userId = user?._id
+  const [dailyProblemSolved, setDailyProblemSolved] = useState(false) // Add state to track if daily problem is solved
 
   // Timer Effect
   useEffect(() => {
@@ -116,7 +120,6 @@ export default function CodeEditor() {
 
     try {
       const results = await submitCodeWithTests(
-        // Re-use the submit logic
         language,
         code,
         problem.testcases
@@ -124,14 +127,6 @@ export default function CodeEditor() {
       setSubmissionResults(results)
       setIsSubmitting(false)
       setActiveTab('results')
-
-      // Check if all test cases passed
-      const allPassed = results.every((result) => result.passed)
-      if (allPassed) {
-        console.log(
-          'Congratulations! Your solution passed all test cases during Run.'
-        )
-      }
     } catch (err) {
       console.error('Error running code against test cases:', err)
       setSubmissionError('Failed to run code against test cases.')
@@ -148,6 +143,11 @@ export default function CodeEditor() {
       setTimeout(() => submitBtn.classList.remove('animate-bounce'), 800)
     }
 
+    if (!userId) {
+      setSubmissionError('You must be logged in to submit a solution.')
+      setIsSubmitting(false)
+      return
+    }
     setIsRunning(false)
     setIsSubmitting(true)
     setSubmissionResults([])
@@ -166,6 +166,44 @@ export default function CodeEditor() {
         problem.testcases
       )
       setSubmissionResults(results)
+
+      // Check if all test cases passed
+      const allPassed = results.every((result) => result.passed)
+
+      if (allPassed) {
+        //  Update user submission data
+        const submissionData = {
+          qid: problem._id, //  problem ID
+          progress: 'solved', //  or 'attempted', etc.
+          solution: code,
+          timeTaken: timer,
+        }
+
+        try {
+          //  Call the service function to update the user's submission
+          const response = await updateUserSubmission(
+            userId,
+            submissionData,
+            dailyProblemSolved
+          )
+          console.log('User submission updated:', response)
+          setDailyProblemSolved(response.dailyProblemSolved) // Update state if daily problem solved
+        } catch (userUpdateError) {
+          console.error('Error updating user submission:', userUpdateError)
+          setSubmissionError(
+            'Failed to submit your solution.  Please try again.'
+          )
+          setIsSubmitting(false)
+          setActiveTab('results')
+          return // Important: Exit the function on error
+        }
+      } else {
+        setSubmissionError(
+          'Your solution did not pass all test cases.  Please try again.'
+        )
+        console.log('Solution did not pass all test cases.')
+      }
+
       setIsSubmitting(false)
       setActiveTab('results')
     } catch (err) {
