@@ -93,7 +93,7 @@ const ProgressCard = ({ friend }) => {
         ) : (
           <div className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 font-medium py-1 px-3 rounded-full text-sm flex items-center">
             <XCircle size={16} className="mr-1" />
-            <span>Not Completed</span>
+            <span>Not Completed Today</span>
           </div>
         )}
       </div>
