@@ -4,6 +4,7 @@ const problemRoutes = require("./routes/problemRoutes");
 const authRoutes = require("./routes/auth");
 const friendRoutes = require("./routes/friendRoutes");
 const userRoutes = require("./routes/userRoutes");
+const submissionRoutes = require("./routes/submissionRoutes");
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use("/api", problemRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/friends", friendRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/submissions", submissionRoutes);
 
 // Root route
 app.get("/", (req, res) => {
