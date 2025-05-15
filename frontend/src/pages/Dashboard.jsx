@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import FriendsProgress from '../components/dashboard/FriendsProgress'
 import DailyQuestion from '../components/dashboard/DailyQuestion'
 import WeeklyQuestion from '../components/dashboard/WeeklyQuestion'
 import MotivationQuote from '../components/dashboard/MotivationQuote'
 import { getAllProblems } from '../services/problemService'
 import { useAuth } from '../context/AuthContext' // Import the AuthContext
+import { getUserProfile } from '../services/userService'
 
 const Dashboard = () => {
   const [dailyQuestion, setDailyQuestion] = useState(null)
@@ -12,6 +13,9 @@ const Dashboard = () => {
   const [friends, setFriends] = useState([])
   const { user } = useAuth() // Get the user object from the context
   const [loggedInUserId, setLoggedInUserId] = useState(null)
+  const [userProfile, setUserProfile] = useState(null)
+  const [dailyProblemSolved, setDailyProblemSolved] = useState(false)
+  const [weeklyProblemSolved, setWeeklyProblemSolved] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -48,6 +52,47 @@ const Dashboard = () => {
     fetchFriendsProgress()
   }
 
+  const fetchUserProfile = async () => {
+    if (!loggedInUserId) return
+    try {
+      const profile = await getUserProfile(loggedInUserId)
+      setUserProfile(profile)
+
+      const now = new Date()
+      now.setHours(0, 0, 0, 0)
+
+      const problems = await getAllProblems()
+
+      // Get today's daily problem
+      const daily = problems
+        .filter((p) => p.category === 'daily' && new Date(p.date) >= now)
+        .sort((a, b) => new Date(a.date) - new Date(b.date))[0]
+
+      // Get current week's weekly problem
+      const weekly = problems
+        .filter((p) => p.category === 'weekly' && new Date(p.date) >= now)
+        .sort((a, b) => new Date(a.date) - new Date(b.date))[0]
+
+      setDailyProblemSolved(
+        profile.problemSolved?.daily?.some((sub) => sub.qid === daily?._id) ||
+          false
+      )
+
+      setWeeklyProblemSolved(
+        profile.problemSolved?.weekly?.some((sub) => sub.qid === weekly?._id) ||
+          false
+      )
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+    }
+  }
+
+  useEffect(() => {
+    if (loggedInUserId) {
+      fetchUserProfile()
+    }
+  }, [loggedInUserId])
+
   useEffect(() => {
     const fetchDashboardQuestions = async () => {
       try {
@@ -70,7 +115,7 @@ const Dashboard = () => {
             date: new Date(daily.date).toLocaleDateString('en-GB'),
             title: daily.title,
             timeTaken: `${daily.timeLimit} hr`,
-            status: 'Pending',
+            status: dailyProblemSolved ? 'Done' : 'Pending', // Use the state
           })
         }
 
@@ -80,6 +125,7 @@ const Dashboard = () => {
             date: new Date(weekly.date).toLocaleDateString('en-GB'),
             title: weekly.title,
             timeTaken: `${weekly.timeLimit} hr`,
+            status: weeklyProblemSolved ? 'Done' : 'Pending', // Use the state
           })
         }
       } catch (err) {
@@ -88,7 +134,7 @@ const Dashboard = () => {
     }
 
     fetchDashboardQuestions()
-  }, [])
+  }, [dailyProblemSolved, weeklyProblemSolved])
 
   return (
     <div className="min-h-screen dark:bg-primaryBg">
