@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import ProblemTable from '../components/problem/ProblemTable'
 import { getAllProblems } from '../services/problemService'
+import Loader from '../components/loader/Loader'
 
 const Problems = () => {
   const [dailyProblems, setDailyProblems] = useState([])
@@ -47,7 +48,11 @@ const Problems = () => {
   }, [])
 
   if (loading) {
-    return <div className="text-center mt-8">Loading problems...</div>
+    return (
+      <div className="flex justify-center items-center dark:bg-primaryBg">
+        <Loader />
+      </div>
+    )
   }
 
   return (

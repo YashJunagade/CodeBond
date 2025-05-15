@@ -4,15 +4,11 @@ import DailyQuestion from '../components/dashboard/DailyQuestion'
 import WeeklyQuestion from '../components/dashboard/WeeklyQuestion'
 import MotivationQuote from '../components/dashboard/MotivationQuote'
 import { getAllProblems } from '../services/problemService'
+import useRedirectIfNotLoggedIn from '../hooks/useRedirectIfNotLoggedIn'
 
 const Dashboard = () => {
   const [dailyQuestion, setDailyQuestion] = useState(null)
   const [weeklyQuestion, setWeeklyQuestion] = useState(null)
-
-  const user = {
-    name: 'Yash',
-    avatar: 'https://example.com/yash.jpg',
-  }
 
   const friends = [
     {
@@ -32,7 +28,6 @@ const Dashboard = () => {
       todayStatus: 'Done',
     },
   ]
-
   useEffect(() => {
     const fetchDashboardQuestions = async () => {
       try {
