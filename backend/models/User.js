@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
     week: Number,
     total: Number,
   },
-  friendList: [String],
+  friendList: [{ type: String, ref: "User" }],
   todayDone: Boolean,
   problemSolved: {
     daily: [
