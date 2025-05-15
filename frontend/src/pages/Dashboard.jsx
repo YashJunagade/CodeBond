@@ -4,30 +4,50 @@ import DailyQuestion from '../components/dashboard/DailyQuestion'
 import WeeklyQuestion from '../components/dashboard/WeeklyQuestion'
 import MotivationQuote from '../components/dashboard/MotivationQuote'
 import { getAllProblems } from '../services/problemService'
-import useRedirectIfNotLoggedIn from '../hooks/useRedirectIfNotLoggedIn'
+import { useAuth } from '../context/AuthContext' // Import the AuthContext
 
 const Dashboard = () => {
   const [dailyQuestion, setDailyQuestion] = useState(null)
   const [weeklyQuestion, setWeeklyQuestion] = useState(null)
+  const [friends, setFriends] = useState([])
+  const { user } = useAuth() // Get the user object from the context
+  const [loggedInUserId, setLoggedInUserId] = useState(null)
 
-  const friends = [
-    {
-      name: 'Tanu',
-      avatar: 'https://example.com/tanu.jpg',
-      dayStreak: 1,
-      weekStreak: 1,
-      totalScore: 10,
-      todayStatus: 'Done',
-    },
-    {
-      name: 'Brinda',
-      avatar: 'https://example.com/brinda.jpg',
-      dayStreak: 1,
-      weekStreak: 1,
-      totalScore: 10,
-      todayStatus: 'Done',
-    },
-  ]
+  useEffect(() => {
+    if (user) {
+      setLoggedInUserId(user._id) // Access the user ID from the user object
+    }
+  }, [user])
+
+  // Simulate fetching friends on component mount and when a friend is added
+  const fetchFriendsProgress = async () => {
+    if (!loggedInUserId) return // Don't fetch if we don't have the user ID yet
+
+    try {
+      const response = await fetch(`/api/friends/progress/${loggedInUserId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setFriends(data)
+      } else {
+        console.error('Failed to fetch friends progress')
+        setFriends([])
+      }
+    } catch (error) {
+      console.error('Error fetching friends progress:', error)
+      setFriends([])
+    }
+  }
+
+  useEffect(() => {
+    if (loggedInUserId) {
+      fetchFriendsProgress()
+    }
+  }, [loggedInUserId])
+
+  const handleFriendAdded = () => {
+    fetchFriendsProgress()
+  }
+
   useEffect(() => {
     const fetchDashboardQuestions = async () => {
       try {
@@ -35,11 +55,10 @@ const Dashboard = () => {
         const now = new Date()
         now.setHours(0, 0, 0, 0)
 
-        // Helper to filter future/today questions and sort them by date
         const getUpcoming = (category) => {
           return problems
             .filter((p) => p.category === category && new Date(p.date) >= now)
-            .sort((a, b) => new Date(a.date) - new Date(b.date))[0] // only the next one
+            .sort((a, b) => new Date(a.date) - new Date(b.date))[0]
         }
 
         const daily = getUpcoming('daily')
@@ -51,7 +70,7 @@ const Dashboard = () => {
             date: new Date(daily.date).toLocaleDateString('en-GB'),
             title: daily.title,
             timeTaken: `${daily.timeLimit} hr`,
-            status: 'Pending', // or 'Done' if you track completion
+            status: 'Pending',
           })
         }
 
@@ -74,7 +93,13 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen dark:bg-primaryBg">
       {/* <Header /> */}
-      <FriendsProgress friends={friends} />
+      {loggedInUserId && (
+        <FriendsProgress
+          friends={friends}
+          userId={loggedInUserId}
+          onFriendAdded={handleFriendAdded}
+        />
+      )}
       {dailyQuestion && <DailyQuestion question={dailyQuestion} />}
       {weeklyQuestion && <WeeklyQuestion question={weeklyQuestion} />}
       <MotivationQuote />
