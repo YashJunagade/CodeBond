@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const problemRoutes = require("./routes/problemRoutes");
 const authRoutes = require("./routes/auth");
+const friendRoutes = require("./routes/friendRoutes");
 
 const app = express();
 
@@ -12,7 +13,7 @@ app.use(express.json());
 // Routes
 app.use("/api", problemRoutes);
 app.use("/api/auth", authRoutes);
-
+app.use("/api/friends", friendRoutes); //<----This line
 // Root route
 app.get("/", (req, res) => {
   res.send("Welcome to the Coding Problem API");
