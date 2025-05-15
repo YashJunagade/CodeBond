@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import ProblemTable from '../components/problem/ProblemTable'
 import { getAllProblems } from '../services/problemService'
 import Loader from '../components/loader/Loader'
+import { useUserProgress } from '../context/UserProgressContext'
 
 const Problems = () => {
   const [dailyProblems, setDailyProblems] = useState([])
   const [weeklyProblems, setWeeklyProblems] = useState([])
   const [loading, setLoading] = useState(true)
+  const { solvedProblems } = useUserProgress()
 
   useEffect(() => {
     const fetchProblems = async () => {
@@ -16,24 +18,28 @@ const Problems = () => {
         const daily = allProblems
           .filter((p) => p.category === 'daily')
           .map((p) => ({
+            qid: p._id,
             day: p.dayOrWeekNo,
             date: new Date(p.date).toLocaleDateString('en-GB'),
             statement: p.title,
-            completed: false,
+            completed: solvedProblems.includes(p._id),
             time: `${p.timeLimit} hr`,
           }))
-          .sort((a, b) => b.day - a.day) // Sort descending by day
+          .sort((a, b) => b.day - a.day)
+
+        console.log(solvedProblems)
 
         const weekly = allProblems
           .filter((p) => p.category === 'weekly')
           .map((p) => ({
+            qid: p._id,
             week: p.dayOrWeekNo,
             date: new Date(p.date).toLocaleDateString('en-GB'),
             statement: p.title,
-            completed: false,
+            completed: solvedProblems.includes(p._id),
             time: `${p.timeLimit} hr`,
           }))
-          .sort((a, b) => b.week - a.week) // Sort descending by week
+          .sort((a, b) => b.week - a.week)
 
         setDailyProblems(daily)
         setWeeklyProblems(weekly)
@@ -45,7 +51,7 @@ const Problems = () => {
     }
 
     fetchProblems()
-  }, [])
+  }, [solvedProblems])
 
   if (loading) {
     return (

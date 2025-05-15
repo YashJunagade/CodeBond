@@ -17,6 +17,7 @@ const Dashboard = () => {
   const [userProfile, setUserProfile] = useState(null)
   const [dailyProblemSolved, setDailyProblemSolved] = useState(false)
   const [weeklyProblemSolved, setWeeklyProblemSolved] = useState(false)
+  const [loading, setLoading] = useState(true) // Add loading state
 
   useEffect(() => {
     if (user) {
@@ -78,11 +79,14 @@ const Dashboard = () => {
       )
     } catch (error) {
       console.error('Error fetching user profile:', error)
+    } finally {
+      setLoading(false) // Set loading to false after fetching
     }
   }
 
   useEffect(() => {
     if (loggedInUserId) {
+      setLoading(true) //start loading
       fetchUserProfile()
     }
   }, [loggedInUserId])
@@ -140,8 +144,12 @@ const Dashboard = () => {
           onFriendAdded={handleFriendAdded}
         />
       )}
-      {dailyQuestion && <DailyQuestion question={dailyQuestion} />}
-      {weeklyQuestion && <WeeklyQuestion question={weeklyQuestion} />}
+      {dailyQuestion && (
+        <DailyQuestion question={dailyQuestion} loading={loading} />
+      )}
+      {weeklyQuestion && (
+        <WeeklyQuestion question={weeklyQuestion} loading={loading} />
+      )}
       <MotivationQuote />
     </div>
   )
