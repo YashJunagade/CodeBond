@@ -6,10 +6,11 @@ const userSchema = new mongoose.Schema({
   username: String,
   profilePic: String,
   score: {
-    day: Number,
-    week: Number,
-    total: Number,
+    day: { type: Number, default: 0 },
+    week: { type: Number, default: 0 },
+    total: { type: Number, default: 0 },
   },
+
   friendList: [{ type: String, ref: "User" }],
   todayDone: Boolean,
   problemSolved: {
