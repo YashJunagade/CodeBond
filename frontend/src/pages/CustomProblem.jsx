@@ -110,7 +110,6 @@ export default function CustomProblem() {
 
     try {
       const response = await createProblem(problemData)
-      console.log('Problem created:', response)
       setSuccess(true)
       toast.success('Problem created successfully!')
       // Reset form
