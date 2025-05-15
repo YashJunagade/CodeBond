@@ -25,6 +25,7 @@
     "lucide-react": "^0.437.0",
     "marked": "^14.0.0",
     "monaco-sql-languages": "^0.12.2",
+    "piston-client": "^1.0.2",
     "re-resizable": "^6.9.17",
     "react": "^18.3.1",
     "react-adsense": "^0.1.0",
