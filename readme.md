@@ -10,7 +10,7 @@ CodeBond is a collaborative coding practice platform designed for friends who wa
 
 - ✍️ **Daily Challenges**: Solve problems together every day
 - 🧪 **Weekly Tests**: Test your progress with friends weekly
-- 💬 **Code Editor with Judge0**: Write, run, and test your code live
+- 💬 **Code Editor with Piston**: Write, run, and test your code live
 - 📊 **Result Tracking**: See who solved what and when
 - 🔗 **Progress Sharing**: Stay motivated through shared streaks
 - 🫂 **Built for Friends**: A space only for your coding circle
@@ -21,7 +21,7 @@ CodeBond is a collaborative coding practice platform designed for friends who wa
 
 - **Frontend**: React.js + Tailwind CSS
 - **Backend**: Node.js + Express
-- **Code Execution**: [Judge0 API](https://judge0.com/)
+- **Code Execution**: Piston
 - **Database**: MongoDB / Firebase (MVP-friendly)
 - **Deployment**: Vercel / Render
 
@@ -47,7 +47,7 @@ We're building a habit. A daily connection. A bond.
 ## 📅 Roadmap
 
 - [x] Project name & idea 💡
-- [x] Judge0 integration 🔁
+- [x] Piston-js integration 🔁
 - [ ] Daily problem feed 🧠
 - [ ] Test scheduling + results 🧪
 - [ ] User dashboard 📊

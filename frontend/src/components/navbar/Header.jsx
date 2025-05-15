@@ -15,14 +15,14 @@ const Header = () => {
       className={`flex flex-col bg-white md:flex-row md:items-center justify-between p-4 dark:bg-primaryBg ${theme} animate-navbar`}
     >
       <div className="flex items-center justify-between w-full md:w-auto">
-        <div>
+        <Link to="/">
           <h1 className="text-2xl text-center font-bold text-gray-800 dark:text-white">
             CodeBond<span className="text-black dark:text-white">❤️</span>
           </h1>
           <p className="text-[10px] font-normal text-gray-600 dark:text-gray-400">
             Where friendships and code are forged together
           </p>
-        </div>
+        </Link>
         <button
           className="md:hidden p-2 rounded focus:outline-none text-gray-700 dark:text-gray-300"
           onClick={() => setMenuOpen(!menuOpen)}
