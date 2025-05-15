@@ -2,11 +2,13 @@ import { Moon, Sun, Menu } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
-const Header = ({ user }) => {
+const Header = () => {
   const { theme, toggleTheme } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
+  const { user } = useAuth()
 
   return (
     <header
@@ -68,9 +70,9 @@ const Header = ({ user }) => {
         <div className="flex items-center gap-2 mr-5">
           <div className="relative">
             <img
-              src={user.avatar}
+              src={user?.profilePic || ''}
               onClick={() => setShowProfilePopup(!showProfilePopup)}
-              className="w-10 h-10 rounded-full border cursor-pointer"
+              className="w-14 h-14 rounded-full object-cover border cursor-pointer"
             />
             {showProfilePopup && (
               <div className="absolute right-0 mt-2 w-60 backdrop-blur-lg  bg-white/70 dark:bg-[#1f1f1f]/80 border border-gray-300 dark:border-gray-700 shadow-xl dark:shadow-[0_4px_30px_rgba(0,0,0,0.7)] hover:shadow-2xl dark:hover:shadow-[0_6px_40px_rgba(0,0,0,0.8)] rounded-xl p-5 z-50 transition-all duration-300 transform scale-95 animate-fade-slide">
