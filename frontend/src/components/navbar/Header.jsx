@@ -1,6 +1,6 @@
 import { Moon, Sun, Menu } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useUserProgress } from '../../context/UserProgressContext'
@@ -85,9 +85,9 @@ const Header = () => {
                 </div>
 
                 <div className="space-y-1 text-xs text-gray-700 dark:text-gray-300">
-                  <p>Day - {progress.day}</p>
-                  <p>Week - {progress.week}</p>
-                  <p>Total Score - {progress.total}</p>
+                  <p>Day - {progress?.day || ''}</p>
+                  <p>Week - {progress?.week || ''}</p>
+                  <p>Total Score - {progress?.total || ''}</p>
                 </div>
               </div>
             )}
