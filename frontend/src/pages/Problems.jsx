@@ -27,8 +27,6 @@ const Problems = () => {
           }))
           .sort((a, b) => b.day - a.day)
 
-        console.log(solvedProblems)
-
         const weekly = allProblems
           .filter((p) => p.category === 'weekly')
           .map((p) => ({

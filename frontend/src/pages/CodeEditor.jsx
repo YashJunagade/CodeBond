@@ -2,27 +2,25 @@ import React, { useState, useEffect } from 'react'
 import Split from 'react-split'
 import Editor from '@monaco-editor/react'
 import { useTheme } from '../context/ThemeContext'
-import {
-  Code,
-  Play,
-  CheckCircle,
-  Clock,
-  Users,
-  Lightbulb,
-  Pause,
-} from 'lucide-react'
+import { Code, Play, CheckCircle, Clock, Pause } from 'lucide-react'
 import '../styles/SplitStyles.css'
 import { useParams } from 'react-router-dom'
 import { getProblemByTitle } from '../services/problemService'
 import ProblemDescription from '../components/CodeEditor/ProblemDescription'
 import ExecutionResults from '../components/CodeEditor/ExecutionResults'
 import { runCode, submitCodeWithTests } from '../services/executionServer'
-import { updateUserSubmission } from '../services/userService' // Import the new service function
+import { getUserProfile, updateUserSubmission } from '../services/userService'
 import { useAuth } from '../context/AuthContext'
+import SubmissionsList from '../components/codeEditor/SubmissionList'
+import { createSubmission } from '../services/submissionService'
+import { getFriendsSolutions } from '../services/friendService'
+import FriendsSolutionTab from '../components/codeEditor/FriendsSolutionTab' // Import the new tab component
 
 export default function CodeEditor() {
   const { title } = useParams()
   const { theme } = useTheme()
+  const { user } = useAuth()
+  const userId = user?._id
 
   const [problem, setProblem] = useState(null)
   const [loadingProblem, setLoadingProblem] = useState(true)
@@ -36,11 +34,40 @@ export default function CodeEditor() {
   const [submissionResults, setSubmissionResults] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submissionError, setSubmissionError] = useState(null)
-  const { user } = useAuth()
-  const userId = user?._id
-  const [dailyProblemSolved, setDailyProblemSolved] = useState(false) // Add state to track if daily problem is solved
+  const [isProblemSolved, setIsProblemSolved] = useState(false)
+  const [solvedCode, setSolvedCode] = useState(null)
+  const [boilerplateCode, setBoilerplateCode] = useState('// Your code here')
+  const [dailyProblemSolved, setDailyProblemSolved] = useState(false)
 
-  // Timer Effect
+  const [friendsSolutions, setFriendsSolutions] = useState(null)
+  const [loadingFriends, setLoadingFriends] = useState(false)
+
+  useEffect(() => {
+    let intervalId
+
+    const fetchFriendsSolutionsPeriodically = async () => {
+      if (userId && problem?._id) {
+        try {
+          const solutions = await getFriendsSolutions(userId, problem._id)
+          setFriendsSolutions(solutions)
+        } catch (err) {
+          console.error('Failed to fetch friends’ solutions:', err)
+        }
+      }
+    }
+
+    if (activeTab === 'friends solution' && userId && problem?._id) {
+      setLoadingFriends(true)
+      fetchFriendsSolutionsPeriodically() // Initial fetch
+      intervalId = setInterval(fetchFriendsSolutionsPeriodically, 5000) // Fetch every 5 seconds
+      setLoadingFriends(false)
+    } else {
+      clearInterval(intervalId) // Clear interval if tab is not active or no problem/user
+    }
+
+    return () => clearInterval(intervalId) // Cleanup on unmount
+  }, [userId, problem?._id, activeTab])
+
   useEffect(() => {
     let interval = null
     if (isRunning) {
@@ -51,7 +78,52 @@ export default function CodeEditor() {
     return () => clearInterval(interval)
   }, [isRunning])
 
-  // Fetch problem
+  useEffect(() => {
+    const fetchProblemAndUserData = async () => {
+      try {
+        setLoadingProblem(true)
+        const problemData = await getProblemByTitle(title)
+        setProblem(problemData)
+
+        let initialCode = problemData?.boilerplate || `// Your code here`
+        setBoilerplateCode(initialCode)
+
+        let isSolved = false
+        let savedSolution = null
+
+        if (userId) {
+          const userProfile = await getUserProfile(userId)
+          const solvedEntry =
+            userProfile.problemSolved.daily.find(
+              (entry) =>
+                entry.qid === problemData._id && entry.progress === 'solved'
+            ) ||
+            userProfile.problemSolved.weekly.find(
+              (entry) =>
+                entry.qid === problemData._id && entry.progress === 'solved'
+            )
+
+          if (solvedEntry) {
+            isSolved = true
+            savedSolution = solvedEntry.solution
+            initialCode = savedEntry.solution
+          }
+        }
+
+        setSolvedCode(savedSolution)
+
+        setIsProblemSolved(isSolved)
+        setLoadingProblem(false)
+      } catch (err) {
+        console.error('Error fetching problem:', err)
+        setErrorProblem('Failed to load problem. Please try again later.')
+        setLoadingProblem(false)
+      }
+    }
+
+    fetchProblemAndUserData()
+  }, [title, userId])
+
   useEffect(() => {
     const fetchProblem = async () => {
       try {
@@ -59,11 +131,24 @@ export default function CodeEditor() {
         const problemData = await getProblemByTitle(title)
         setProblem(problemData)
 
-        const cppBoilerplate =
-          problemData?.boilerplate ||
-          `#include <iostream>\n#include <vector>\n\nint main() {\n    // Your code here\n    return 0;\n}`
+        let initialCode = problemData?.boilerplate || `// Your code here`
+        let alreadySolved = false
 
-        setCode(cppBoilerplate)
+        if (userId) {
+          const userProfile = await getUserProfile(userId)
+          const solvedEntry = userProfile.problemSolved?.daily?.find(
+            (entry) =>
+              entry.qid === problemData._id && entry.progress === 'solved'
+          )
+
+          if (solvedEntry) {
+            alreadySolved = true
+            initialCode = solvedEntry.solution
+          }
+        }
+
+        setDailyProblemSolved(alreadySolved)
+        setCode(initialCode)
         setLoadingProblem(false)
       } catch (err) {
         console.error('Error fetching problem:', err)
@@ -73,23 +158,13 @@ export default function CodeEditor() {
     }
 
     fetchProblem()
-  }, [title])
+  }, [title, userId])
 
   const formatTime = () => {
     const seconds = `0${timer % 60}`.slice(-2)
     const minutes = `0${Math.floor(timer / 60) % 60}`.slice(-2)
     const hours = `0${Math.floor(timer / 3600)}`.slice(-2)
     return `${hours}:${minutes}:${seconds}`
-  }
-
-  const formatDate = (dateString) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
   }
 
   const handleEditorChange = (value) => {
@@ -112,7 +187,7 @@ export default function CodeEditor() {
     setSubmissionResults([])
     setSubmissionError(null)
 
-    if (!problem?.testcases || problem.testcases.length === 0) {
+    if (!problem?.testcases?.length) {
       setSubmissionError('No test cases found for this problem.')
       setIsSubmitting(false)
       return
@@ -128,10 +203,9 @@ export default function CodeEditor() {
       setIsSubmitting(false)
       setActiveTab('results')
     } catch (err) {
-      console.error('Error running code against test cases:', err)
-      setSubmissionError('Failed to run code against test cases.')
+      console.error('Error running code:', err)
+      setSubmissionError('Failed to run code.')
       setIsSubmitting(false)
-      setSubmissionResults([])
       setActiveTab('results')
     }
   }
@@ -145,16 +219,16 @@ export default function CodeEditor() {
 
     if (!userId) {
       setSubmissionError('You must be logged in to submit a solution.')
-      setIsSubmitting(false)
       return
     }
+
     setIsRunning(false)
     setIsSubmitting(true)
     setSubmissionResults([])
     setSubmissionError(null)
 
-    if (!problem?.testcases || problem.testcases.length === 0) {
-      setSubmissionError('No test cases found for this problem.')
+    if (!problem?.testcases?.length) {
+      setSubmissionError('No test cases found.')
       setIsSubmitting(false)
       return
     }
@@ -167,61 +241,45 @@ export default function CodeEditor() {
       )
       setSubmissionResults(results)
 
-      // Check if all test cases passed
-      const allPassed = results.every((result) => result.passed)
+      const allPassed = results.every((r) => r.passed)
 
       if (allPassed) {
-        //  Update user submission data
         const submissionData = {
-          qid: problem._id, //  problem ID
-          progress: 'solved', //  or 'attempted', etc.
+          userId,
+          problemId: problem._id,
+          code,
+          language,
+          results,
+          timeTaken: timer,
+        }
+
+        await createSubmission(submissionData)
+
+        const profileData = {
+          qid: problem._id,
+          progress: 'solved',
           solution: code,
           timeTaken: timer,
         }
 
-        try {
-          //  Call the service function to update the user's submission
-          const response = await updateUserSubmission(
-            userId,
-            submissionData,
-            dailyProblemSolved
-          )
-          console.log('User submission updated:', response)
-          setDailyProblemSolved(response.dailyProblemSolved) // Update state if daily problem solved
-        } catch (userUpdateError) {
-          console.error('Error updating user submission:', userUpdateError)
-          setSubmissionError(
-            'Failed to submit your solution.  Please try again.'
-          )
-          setIsSubmitting(false)
-          setActiveTab('results')
-          return // Important: Exit the function on error
-        }
-      } else {
-        setSubmissionError(
-          'Your solution did not pass all test cases.  Please try again.'
+        const updateRes = await updateUserSubmission(
+          userId,
+          profileData,
+          dailyProblemSolved
         )
-        console.log('Solution did not pass all test cases.')
+        setDailyProblemSolved(updateRes.dailyProblemSolved)
+      } else {
+        setSubmissionError('Your solution did not pass all test cases.')
       }
 
       setIsSubmitting(false)
       setActiveTab('results')
     } catch (err) {
-      console.error('Error submitting with test cases:', err)
-      setSubmissionError('Failed to submit solution for evaluation.')
+      console.error('Submission error:', err)
+      setSubmissionError('Failed to submit your solution.')
       setIsSubmitting(false)
-      setSubmissionResults([])
       setActiveTab('results')
     }
-  }
-
-  const viewFriendSolutions = () => {
-    const friendsBtn = document.getElementById('friends-btn')
-    if (friendsBtn) {
-      friendsBtn.classList.add('animate-ping')
-      setTimeout(() => friendsBtn.classList.remove('animate-ping'), 800)
-    }
-    alert('Friend solutions functionality would be implemented here!')
   }
 
   const getDifficultyColor = (level) => {
@@ -237,6 +295,15 @@ export default function CodeEditor() {
     }
   }
 
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    })
+  }
+
   return (
     <div className="h-screen w-full flex flex-col bg-white dark:bg-zinc-900 text-black dark:text-white transition-colors duration-300 overflow-hidden pb-8">
       <Split
@@ -249,32 +316,28 @@ export default function CodeEditor() {
         {/* Left Panel */}
         <div className="flex flex-col bg-gray-100 dark:bg-zinc-900 p-4 rounded-md shadow-md h-full overflow-hidden">
           <div className="flex border-b border-gray-200 dark:border-gray-700">
-            <button
-              onClick={() => setActiveTab('problem')}
-              className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
-                activeTab === 'problem'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300'
-              }`}
-            >
-              Problem
-            </button>
-            <button
-              onClick={() => setActiveTab('results')}
-              className={`py-2 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
-                activeTab === 'results'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 hover:border-gray-300'
-              }`}
-              disabled={isSubmitting}
-            >
-              Results
-              {isSubmitting && (
-                <div className="inline-block ml-2 animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
-              )}
-            </button>
+            {['problem', 'results', 'submissions', 'friends solution'].map(
+              (tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`py-2 px-4 border-b-2 font-medium text-sm ${
+                    activeTab === tab
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400'
+                  }`}
+                  disabled={tab === 'results' && isSubmitting}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {tab === 'results' && isSubmitting && (
+                    <span className="ml-2 inline-block animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full" />
+                  )}
+                </button>
+              )
+            )}
           </div>
-          <div className="bg-white dark:bg-zinc-800 p-4 rounded-md shadow-inner overflow-y-auto flex-1">
+
+          <div className="bg-white dark:bg-zinc-800 p-4 rounded-md overflow-y-scroll flex-1">
             {activeTab === 'problem' && (
               <ProblemDescription
                 problem={problem}
@@ -282,7 +345,7 @@ export default function CodeEditor() {
                 error={errorProblem}
                 formatDate={formatDate}
                 getDifficultyColor={getDifficultyColor}
-                viewFriendSolutions={viewFriendSolutions}
+                isSolved={isProblemSolved}
               />
             )}
             {activeTab === 'results' && (
@@ -291,6 +354,15 @@ export default function CodeEditor() {
                 problem={problem}
                 loading={isSubmitting}
                 error={submissionError}
+              />
+            )}
+            {activeTab === 'submissions' && problem && (
+              <SubmissionsList problemId={problem._id} />
+            )}
+            {activeTab === 'friends solution' && (
+              <FriendsSolutionTab
+                friendsSolutions={friendsSolutions}
+                loadingFriends={loadingFriends}
               />
             )}
           </div>
@@ -303,23 +375,20 @@ export default function CodeEditor() {
               id="run-btn"
               onClick={runCodeSingle}
               disabled={isSubmitting}
-              className={`flex items-center gap-2 bg-green-500 hover:bg-green-600 px-4 py-2 rounded-md text-white font-medium transition-all duration-200 shadow-md hover:shadow-lg ${
-                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className="flex items-center gap-2 bg-green-500 hover:bg-green-600 px-4 py-2 rounded-md text-white"
             >
               <Play className="w-4 h-4" />
-              <span>Run</span>
+              Run
             </button>
 
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded-md">
+              <div className="bg-gray-200 dark:bg-gray-800 px-3 py-1 rounded-md flex items-center gap-2">
                 <Clock className="w-4 h-4 text-blue-500" />
-                <div className="text-sm font-mono">{formatTime()}</div>
+                <span className="font-mono text-sm">{formatTime()}</span>
               </div>
               <button
-                id="timer-btn"
                 onClick={toggleTimer}
-                className="flex items-center justify-center bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 p-1 rounded-md"
+                className="p-1 rounded-md bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700"
               >
                 {isRunning ? (
                   <Pause className="w-4 h-4 text-orange-500" />
@@ -328,24 +397,37 @@ export default function CodeEditor() {
                 )}
               </button>
             </div>
+            <button
+              onClick={() => setCode(boilerplateCode)}
+              disabled={isSubmitting}
+              className="flex items-center gap-2 bg-gray-300 hover:bg-gray-400 px-3 py-1 rounded-md text-black dark:text-white dark:bg-gray-700 dark:hover:bg-gray-600"
+            >
+              Reset
+            </button>
+
+            <button
+              onClick={() => solvedCode && setCode(solvedCode)}
+              disabled={!solvedCode || isSubmitting}
+              className="flex items-center gap-2 bg-gray-300 hover:bg-gray-400 px-3 py-1 rounded-md text-black dark:text-white  dark:bg-gray-700 dark:hover:bg-gray-600"
+            >
+              Retrieve
+            </button>
 
             <button
               id="submit-btn"
               onClick={submitSolutionWithTestCases}
               disabled={isSubmitting}
-              className={`flex items-center gap-2 bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md text-white font-medium transition-all duration-200 shadow-md hover:shadow-lg ${
-                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md text-white"
             >
               <CheckCircle className="w-4 h-4" />
-              <span>Submit</span>
+              Submit
             </button>
           </div>
 
-          <div className="flex-1 max-h-[79%] border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden shadow-lg">
-            <div className="h-8 bg-gray-100 dark:bg-zinc-800 border-b border-gray-200 dark:border-gray-700 flex items-center px-3">
-              <Code className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+          <div className="flex-1 max-h-[79%] border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+            <div className="h-8 bg-gray-100 dark:bg-zinc-800 border-b px-3 flex items-center">
+              <Code className="w-4 h-4 text-gray-500" />
+              <span className="ml-2 text-xs">
                 main.{language === 'python3' ? 'py' : language}
               </span>
             </div>
@@ -359,32 +441,7 @@ export default function CodeEditor() {
                 minimap: { enabled: false },
                 scrollBeyondLastLine: false,
                 fontSize: 14,
-                fontFamily: 'Menlo, Monaco, "Courier New", monospace',
                 tabSize: 2,
-              }}
-              beforeMount={(monaco) => {
-                monaco.editor.defineTheme('vs-dark', {
-                  base: 'vs-dark',
-                  inherit: true,
-                  rules: [],
-                  colors: {
-                    'editor.background': '#1e1e1e',
-                    'editor.lineHighlightBackground': '#2d2d2d',
-                    'editorLineNumber.foreground': '#6e6e6e',
-                    'editorCursor.foreground': '#d4d4d4',
-                  },
-                })
-                monaco.editor.defineTheme('light', {
-                  base: 'vs',
-                  inherit: true,
-                  rules: [],
-                  colors: {
-                    'editor.background': '#ffffff',
-                    'editor.lineHighlightBackground': '#f5f5f5',
-                    'editorLineNumber.foreground': '#999999',
-                    'editorCursor.foreground': '#333333',
-                  },
-                })
               }}
             />
           </div>
