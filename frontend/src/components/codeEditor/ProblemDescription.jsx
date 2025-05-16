@@ -15,6 +15,7 @@ const ProblemDescription = ({
   formatDate,
   getDifficultyColor,
   viewFriendSolutions,
+  isSolved,
 }) => {
   if (!problem) {
     return <div>No problem data available</div>
@@ -25,7 +26,14 @@ const ProblemDescription = ({
       {/* Problem Header */}
       <div className="border-b pb-4 dark:border-gray-700">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold">{problem.title}</h1>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            {problem.title}
+            {isSolved && (
+              <span className="flex items-center gap-1 text-green-600 dark:text-green-400 text-sm font-semibold bg-green-100 dark:bg-green-800 px-2 py-0.5 rounded-md">
+                ✅ Solved
+              </span>
+            )}
+          </h1>
           <span className={`font-medium ${getDifficultyColor(problem.level)}`}>
             {problem.level}
           </span>
