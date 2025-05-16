@@ -1,4 +1,3 @@
-// src/context/UserProgressContext.js
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth } from './AuthContext'
 import { getUserProfile } from '../services/userService'

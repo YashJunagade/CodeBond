@@ -1,4 +1,3 @@
-// src/components/Header/Header.jsx
 import { Moon, Sun, Menu } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
 import { useState } from 'react'
@@ -77,7 +76,7 @@ const Header = () => {
             <img
               src={user?.profilePic || ''}
               onClick={() => setShowProfilePopup(!showProfilePopup)}
-              className="w-14 h-14 rounded-full object-cover border border-primaryBtn cursor-pointer"
+              className="w-14 h-14 rounded-full object-cover border cursor-pointer"
               alt="User Profile"
             />
             {showProfilePopup && (
@@ -89,7 +88,7 @@ const Header = () => {
                 </div>
 
                 <div className="space-y-1 text-xs text-gray-700 dark:text-gray-300">
-                  <p>User ID: {user?._id}</p> {/* Display User ID */}
+                  <p>User ID: {user?._id}</p>
                   {loadingProgress ? (
                     <p>Loading progress...</p>
                   ) : error ? (

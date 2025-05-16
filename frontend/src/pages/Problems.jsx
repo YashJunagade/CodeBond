@@ -8,13 +8,12 @@ const Problems = () => {
   const [dailyProblems, setDailyProblems] = useState([])
   const [weeklyProblems, setWeeklyProblems] = useState([])
   const [loading, setLoading] = useState(true)
-  const { solvedProblems } = useUserProgress()
+  const { progress } = useUserProgress() // Access the entire progress object
 
   useEffect(() => {
     const fetchProblems = async () => {
       try {
         const allProblems = await getAllProblems()
-
         const daily = allProblems
           .filter((p) => p.category === 'daily')
           .map((p) => ({
@@ -22,7 +21,7 @@ const Problems = () => {
             day: p.dayOrWeekNo,
             date: new Date(p.date).toLocaleDateString('en-GB'),
             statement: p.title,
-            completed: solvedProblems.includes(p._id),
+            completed: progress?.solvedProblems?.includes(p._id) || false, // Use optional chaining on progress and solvedProblems
             time: `${p.timeLimit} hr`,
           }))
           .sort((a, b) => b.day - a.day)
@@ -34,7 +33,7 @@ const Problems = () => {
             week: p.dayOrWeekNo,
             date: new Date(p.date).toLocaleDateString('en-GB'),
             statement: p.title,
-            completed: solvedProblems.includes(p._id),
+            completed: progress?.solvedProblems?.includes(p._id) || false, // Use optional chaining
             time: `${p.timeLimit} hr`,
           }))
           .sort((a, b) => b.week - a.week)
@@ -49,7 +48,7 @@ const Problems = () => {
     }
 
     fetchProblems()
-  }, [solvedProblems])
+  }, [progress?.solvedProblems]) // Re-run effect when solvedProblems updates
 
   if (loading) {
     return (
