@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
     total: { type: Number, default: 0 },
   },
 
-  friendList: [{ type: String, ref: "User" }],
+  friendList: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   todayDone: Boolean,
   problemSolved: {
     daily: [
