@@ -18,7 +18,6 @@ const Login = () => {
       )
       setUser(res.data.user)
       localStorage.setItem('user', JSON.stringify(res.data.user))
-      console.log(res.data.user)
       setMessage('Login successful')
       navigate('/')
     } catch (err) {

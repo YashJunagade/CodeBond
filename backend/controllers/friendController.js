@@ -3,7 +3,6 @@ const User = require("../models/User");
 // Add a friend to the user's friend list
 exports.addFriend = async (req, res) => {
   const { userId, friendId } = req.body;
-  console.log(userId, friendId);
 
   try {
     // Find the current user
