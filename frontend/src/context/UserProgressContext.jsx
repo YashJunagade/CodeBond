@@ -9,16 +9,20 @@ export const useUserProgress = () => useContext(UserProgressContext)
 
 export const UserProgressProvider = ({ children }) => {
   const { user } = useAuth()
-  const [progress, setProgress] = useState({
-    day: 0,
-    week: 0,
-    total: 0,
-    solvedProblems: [],
-  })
+  const [progress, setProgress] = useState(null)
+  const [loadingProgress, setLoadingProgress] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchProgress = async () => {
-      if (!user?._id) return
+      if (!user?._id) {
+        setProgress(null)
+        setLoadingProgress(false)
+        return
+      }
+
+      setLoadingProgress(true)
+      setError(null)
 
       try {
         const data = await getUserProfile(user._id)
@@ -39,8 +43,12 @@ export const UserProgressProvider = ({ children }) => {
           total: data.score?.total || 0,
           solvedProblems: [...solvedDaily, ...solvedWeekly],
         })
-      } catch (error) {
-        console.error('Error fetching user progress:', error)
+      } catch (err) {
+        console.error('Error fetching user progress:', err)
+        setError(err.message || 'Failed to fetch user progress.')
+        setProgress(null)
+      } finally {
+        setLoadingProgress(false)
       }
     }
 
@@ -48,7 +56,7 @@ export const UserProgressProvider = ({ children }) => {
   }, [user?._id])
 
   return (
-    <UserProgressContext.Provider value={progress}>
+    <UserProgressContext.Provider value={{ progress, loadingProgress, error }}>
       {children}
     </UserProgressContext.Provider>
   )

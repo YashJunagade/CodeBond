@@ -1,6 +1,7 @@
+// src/components/Header/Header.jsx
 import { Moon, Sun, Menu } from 'lucide-react'
 import { useTheme } from '../../context/ThemeContext'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useUserProgress } from '../../context/UserProgressContext'
@@ -10,7 +11,7 @@ const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false)
   const [showProfilePopup, setShowProfilePopup] = useState(false)
   const { user } = useAuth()
-  const { progress } = useUserProgress()
+  const { progress, loadingProgress, error } = useUserProgress()
 
   return (
     <header
@@ -34,7 +35,9 @@ const Header = () => {
       </div>
 
       <nav
-        className={`${menuOpen ? 'flex' : 'hidden'} flex-col md:flex md:flex-row gap-4 md:gap-6 mt-4 md:mt-0`}
+        className={`${
+          menuOpen ? 'flex' : 'hidden'
+        } flex-col md:flex md:flex-row gap-4 md:gap-6 mt-4 md:mt-0`}
       >
         <Link className="navbar-btn" to="/">
           Dashboard
@@ -74,20 +77,32 @@ const Header = () => {
             <img
               src={user?.profilePic || ''}
               onClick={() => setShowProfilePopup(!showProfilePopup)}
-              className="w-14 h-14 rounded-full object-cover border cursor-pointer"
+              className="w-14 h-14 rounded-full object-cover border border-primaryBtn cursor-pointer"
+              alt="User Profile"
             />
             {showProfilePopup && (
               <div className="absolute right-0 mt-2 w-60 backdrop-blur-lg  bg-white/70 dark:bg-[#1f1f1f]/80 border border-gray-300 dark:border-gray-700 shadow-xl dark:shadow-[0_4px_30px_rgba(0,0,0,0.7)] hover:shadow-2xl dark:hover:shadow-[0_6px_40px_rgba(0,0,0,0.8)] rounded-xl p-5 z-50 transition-all duration-300 transform scale-95 animate-fade-slide">
                 <div className="border-b-2 border-primaryBtn pb-2 mb-2">
                   <p className="text-sm font-semibold text-black dark:text-white tracking-wide">
-                    👋 Hey {user.name},
+                    👋 Hey {user?.name},
                   </p>
                 </div>
 
                 <div className="space-y-1 text-xs text-gray-700 dark:text-gray-300">
-                  <p>Day - {progress?.day || ''}</p>
-                  <p>Week - {progress?.week || ''}</p>
-                  <p>Total Score - {progress?.total || ''}</p>
+                  <p>User ID: {user?._id}</p> {/* Display User ID */}
+                  {loadingProgress ? (
+                    <p>Loading progress...</p>
+                  ) : error ? (
+                    <p className="text-red-500">Error: {error}</p>
+                  ) : progress ? (
+                    <>
+                      <p>Day - {progress.day}</p>
+                      <p>Week - {progress.week}</p>
+                      <p>Total Score - {progress.total}</p>
+                    </>
+                  ) : (
+                    <p>No progress data available.</p>
+                  )}
                 </div>
               </div>
             )}
