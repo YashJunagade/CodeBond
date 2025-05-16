@@ -18,6 +18,7 @@ const FriendsProgress = ({ userId, onFriendAdded }) => {
   const fetchFriends = async () => {
     try {
       const fetchedFriends = await friendService.getFriendsProgress(userId)
+      console.log(fetchedFriends)
       setFriends(fetchedFriends)
     } catch (error) {
       console.error('Failed to fetch friends', error)
