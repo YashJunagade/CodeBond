@@ -6,6 +6,9 @@ const userController = require("../controllers/userController"); // Adjust the p
 // Define user routes
 router.get("/:userId", userController.getUserProfile);
 router.post("/:userId/submissions", userController.updateUserSubmission);
-// Add other user-related routes here
+router.get(
+  "/friends-solutions/:userId/:problemId",
+  userController.getFriendsSolutionsForProblem
+);
 
 module.exports = router;

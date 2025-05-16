@@ -32,5 +32,24 @@ const friendService = {
     return response.json()
   },
 }
+export const getFriendsSolutions = async (userId, problemId) => {
+  const response = await fetch(
+    `${API_BASE_URL}/users/friends-solutions/${userId}/${problemId}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json()
+    throw new Error(errorData.message || 'Failed to fetch friends solutions')
+  }
+
+  const data = await response.json()
+  return data
+}
 
 export default friendService
