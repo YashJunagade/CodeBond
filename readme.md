@@ -22,7 +22,7 @@ CodeBond is a collaborative coding practice platform designed for friends who wa
 - **Frontend**: React.js + Tailwind CSS
 - **Backend**: Node.js + Express
 - **Code Execution**: Piston
-- **Database**: MongoDB / Firebase (MVP-friendly)
+- **Database**: MongoDB 
 - **Deployment**: Vercel / Render
 
 ---
@@ -42,16 +42,6 @@ We're building a habit. A daily connection. A bond.
 - Prioritize **fun, consistency, and collaboration**
 - Launch the MVP fast and improve with feedback
 
----
-
-## 📅 Roadmap
-
-- [x] Project name & idea 💡
-- [x] Piston-js integration 🔁
-- [ ] Daily problem feed 🧠
-- [ ] Test scheduling + results 🧪
-- [ ] User dashboard 📊
-- [ ] Streak + leaderboard 🔥
 
 ---
 
